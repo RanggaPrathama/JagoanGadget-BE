@@ -1,0 +1,30 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: app-nestjs-api
+    restart: unless-stopped
+    ports:
+      - '${API_PORT:-3000}:3000'
+    env_file:
+      - ./.env
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    command: pnpm start:dev
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    labels:
+      - "prometheus.scrape=true"
+      - "prometheus.port=3000"
+      
+
+    networks:
+      - infrastructure
+
+
+networks:
+  infrastructure:
+    external: true
+    name: global_network

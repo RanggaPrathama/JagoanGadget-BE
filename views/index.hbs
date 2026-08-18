@@ -1,0 +1,231 @@
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-bg" aria-hidden="true">
+        <div class="hero-particles" id="particles"></div>
+    </div>
+    <div class="hero-content">
+        <div class="hero-badge" data-reveal>⚡ Now Available</div>
+        <h1 class="hero-title" data-reveal>
+            Welcome to<br>
+            <span class="hero-gradient">{{appName}}</span>
+        </h1>
+        <p class="hero-desc" data-reveal>
+            Backend engine for <strong class="text-white">your project</strong> — secure, performant, and built for scale.
+        </p>
+        <div class="hero-actions" data-reveal>
+            <a href="/api/auth/status" class="btn btn--primary" target="_blank" rel="noopener">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/></svg>
+                Explore API
+                <svg class="btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+            <a href="#endpoints" class="btn btn--ghost" data-scroll>
+                View Endpoints
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Bar -->
+<section class="stats" data-reveal>
+    <div class="stats-inner">
+        <div class="stat-item">
+            <span class="stat-value">6</span>
+            <span class="stat-label">API Modules</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <span class="stat-value">PostgreSQL</span>
+            <span class="stat-label">Database</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <span class="stat-value">RBAC</span>
+            <span class="stat-label">Access Control</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <span class="stat-value">Better Auth</span>
+            <span class="stat-label">Authentication</span>
+        </div>
+    </div>
+</section>
+
+<!-- Endpoints Section -->
+<section class="endpoints" id="endpoints">
+    <div class="section-head" data-reveal>
+        <span class="section-tag">API Reference</span>
+        <h2 class="section-title">Explore <span class="text-gradient">Modules</span></h2>
+        <p class="section-desc">Every endpoint is secured, versioned, and documented.</p>
+    </div>
+
+    <div class="ep-grid">
+        <a href="/api/auth/status" class="ep-card" data-reveal target="_blank" rel="noopener" style="--accent:#6c5ce7;--accent-bg:rgba(108,92,231,0.08)">
+            <div class="ep-head">
+                <div class="ep-icon" style="background:var(--accent-bg);color:var(--accent)">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                </div>
+                <div class="ep-method ep-method--get">GET</div>
+            </div>
+            <h3 class="ep-title">Authentication</h3>
+            <p class="ep-desc">Session status, login state, and user identity via Better Auth.</p>
+            <div class="ep-path">
+                <span class="ep-path-text">/api/auth/status</span>
+                <svg class="ep-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </div>
+        </a>
+
+        <a href="/api/me/permissions" class="ep-card" data-reveal target="_blank" rel="noopener" style="--accent:#00cec9;--accent-bg:rgba(0,206,201,0.08)">
+            <div class="ep-head">
+                <div class="ep-icon" style="background:var(--accent-bg);color:var(--accent)">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <div class="ep-method ep-method--get">GET</div>
+            </div>
+            <h3 class="ep-title">My Permissions</h3>
+            <p class="ep-desc">Runtime permission cache — what the current user can access.</p>
+            <div class="ep-path">
+                <span class="ep-path-text">/api/me/permissions</span>
+                <svg class="ep-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </div>
+        </a>
+
+        <a href="/api/admin/menus" class="ep-card" data-reveal target="_blank" rel="noopener" style="--accent:#fdcb6e;--accent-bg:rgba(253,203,110,0.08)">
+            <div class="ep-head">
+                <div class="ep-icon" style="background:var(--accent-bg);color:var(--accent)">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                </div>
+                <div class="ep-method ep-method--get">GET</div>
+            </div>
+            <h3 class="ep-title">Menus</h3>
+            <p class="ep-desc">Self-referencing tree structure for hierarchical menu management.</p>
+            <div class="ep-path">
+                <span class="ep-path-text">/api/admin/menus</span>
+                <svg class="ep-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </div>
+        </a>
+
+        <a href="/api/admin/roles" class="ep-card" data-reveal target="_blank" rel="noopener" style="--accent:#fd79a8;--accent-bg:rgba(253,121,168,0.08)">
+            <div class="ep-head">
+                <div class="ep-icon" style="background:var(--accent-bg);color:var(--accent)">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+                </div>
+                <div class="ep-method ep-method--get">GET</div>
+            </div>
+            <h3 class="ep-title">Roles</h3>
+            <p class="ep-desc">System roles with is_system flag and role-permission mapping.</p>
+            <div class="ep-path">
+                <span class="ep-path-text">/api/admin/roles</span>
+                <svg class="ep-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </div>
+        </a>
+
+        <a href="/api/admin/permissions" class="ep-card" data-reveal target="_blank" rel="noopener" style="--accent:#55efc4;--accent-bg:rgba(85,239,196,0.08)">
+            <div class="ep-head">
+                <div class="ep-icon" style="background:var(--accent-bg);color:var(--accent)">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/></svg>
+                </div>
+                <div class="ep-method ep-method--get">GET</div>
+            </div>
+            <h3 class="ep-title">Permissions</h3>
+            <p class="ep-desc">Fine-grained permissions linked to menus with unique code identifiers.</p>
+            <div class="ep-path">
+                <span class="ep-path-text">/api/admin/permissions</span>
+                <svg class="ep-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </div>
+        </a>
+
+        <a href="/api/admin/users" class="ep-card" data-reveal target="_blank" rel="noopener" style="--accent:#74b9ff;--accent-bg:rgba(116,185,255,0.08)">
+            <div class="ep-head">
+                <div class="ep-icon" style="background:var(--accent-bg);color:var(--accent)">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                </div>
+                <div class="ep-method ep-method--get">GET</div>
+            </div>
+            <h3 class="ep-title">Users</h3>
+            <p class="ep-desc">User CRUD with role assignment, linked to Better Auth via auth_user_id.</p>
+            <div class="ep-path">
+                <span class="ep-path-text">/api/admin/users</span>
+                <svg class="ep-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </div>
+        </a>
+    </div>
+</section>
+
+<!-- Tech Stack Section -->
+<section class="stack">
+    <div class="section-head" data-reveal>
+        <span class="section-tag">Technology</span>
+        <h2 class="section-title">Powered by <span class="text-gradient">Modern Stack</span></h2>
+        <p class="section-desc">Production-grade tools at every layer.</p>
+    </div>
+
+    <div class="stack-grid" data-reveal>
+        <div class="stack-card">
+            <div class="stack-icon" style="--s-color:#e0234e">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.375 0 0 5.375 0 12c0 6.625 5.375 12 12 12 6.625 0 12-5.375 12-12 0-6.625-5.375-12-12-12zm6.68 18.219c-.281.418-.767.268-1.188.134-.473-.151-.902-.511-1.356-.787-1.044-.633-2.099-.268-3.117.134-1.255.5-2.187 1.376-3.52 1.47-.955.067-1.741-.356-2.369-1.043-1.446-1.583-2.518-3.423-3.35-5.432-.387-.935-.734-1.897-1.022-2.876-.135-.46-.237-.98-.098-1.454.185-.632.634-.942 1.24-1.074.377-.082.781.016 1.139.126.613.188 1.167.476 1.663.871.605.482.806 1.188.971 1.906.162.703.085 1.437.13 2.157.01.155.063.403.193.489.182.12.385-.07.524-.183.599-.484 1.014-1.115 1.385-1.761.186-.323.204-.722.26-1.101.084-.573.076-1.17-.005-1.748-.094-.667-.477-1.177-1.083-1.487-.488-.25-.337-.509-.1-.724.311-.281.667-.501 1.066-.632.73-.24 1.466-.244 2.201-.067.694.167 1.085.606 1.271 1.281.258.934.3 1.897.168 2.852-.095.687-.345 1.315-.727 1.886-.28.418-.592.812-.94 1.16-.163.163-.345.335-.425.562-.103.293.061.542.259.692.346.262.679.545 1.032.792.585.408 1.21.691 1.905.783.661.087 1.306-.055 1.861-.466.425-.315.642-.781.79-1.253.213-.68.176-1.377.081-2.067-.094-.683-.383-1.259-.902-1.736-.366-.337-.585-.435-.398-.94.134-.36.329-.687.573-.984.288-.351.633-.642 1.009-.873.556-.342 1.136-.623 1.758-.796.554-.154 1.108-.222 1.667-.09.433.102.637.433.651.865.024.735-.13 1.423-.34 2.128-.436 1.463-1.102 2.832-2.02 4.07-.345.466-.73.91-1.176 1.276-.136.112-.286.244-.215.44.05.139.183.207.305.28.471.282.947.559 1.404.86.562.37 1.051.813 1.356 1.416.197.39.305.828.185 1.256-.103.369-.341.581-.708.664-.23.052-.475.018-.712.018z"/></svg>
+            </div>
+            <span class="stack-name">NestJS {{nestVersion}}</span>
+        </div>
+
+        <div class="stack-card">
+            <div class="stack-icon" style="--s-color:#3178c6">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1.125 0C.502 0 0 .502 0 1.125v21.75C0 23.498.502 24 1.125 24h21.75c.623 0 1.125-.502 1.125-1.125V1.125C24 .502 23.498 0 22.875 0zm9.645 10.07c.01 2.766.01 5.533.01 8.3H9.656c0-2.766-.01-5.533-.01-8.3H6.854V8.35h7.338v1.72z"/></svg>
+            </div>
+            <span class="stack-name">TypeScript</span>
+        </div>
+
+        <div class="stack-card">
+            <div class="stack-icon" style="--s-color:#336791">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+            </div>
+            <span class="stack-name">PostgreSQL</span>
+        </div>
+
+        <div class="stack-card">
+            <div class="stack-icon" style="--s-color:#e74c3c">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/></svg>
+            </div>
+            <span class="stack-name">TypeORM</span>
+        </div>
+
+        <div class="stack-card">
+            <div class="stack-icon" style="--s-color:#6c5ce7">
+                <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </div>
+            <span class="stack-name">Better Auth</span>
+        </div>
+
+        <div class="stack-card">
+            <div class="stack-icon" style="--s-color:#00b894">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <span class="stack-name">RBAC</span>
+        </div>
+    </div>
+</section>
+
+<!-- Server Status -->
+<section class="live" data-reveal>
+    <div class="live-card">
+        <div class="live-row">
+            <span class="live-label">Server Status</span>
+            <span class="live-val live-val--ok">
+                <span class="live-dot"></span>
+                Operational
+            </span>
+        </div>
+        <div class="live-row">
+            <span class="live-label">Environment</span>
+            <code class="live-code">{{NODE_ENV}}</code>
+        </div>
+        <div class="live-row">
+            <span class="live-label">API Prefix</span>
+            <code class="live-code">/api</code>
+        </div>
+        <div class="live-row">
+            <span class="live-label">Version</span>
+            <code class="live-code">{{nestVersion}}</code>
+        </div>
+    </div>
+</section>
