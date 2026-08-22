@@ -136,9 +136,6 @@ export class MenuService {
       case 'inactive':
         qb.andWhere('menu.isActive = false');
         break;
-      case 'all':
-      default:
-        break;
     }
     qb.orderBy('menu.sortOrder', 'ASC').addOrderBy('menu.name', 'ASC');
 

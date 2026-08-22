@@ -2,6 +2,11 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
+export enum ShowFilter {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+}
+
 export const DEFAULT_PAGE = 1;
 export const DEFAULT_LIMIT = 10;
 export const MAX_LIMIT = 100;
@@ -47,4 +52,11 @@ export class PaginationQueryDto {
   @IsOptional()
   @Type(() => Boolean)
   no_pagination?: boolean;
+
+  @ApiPropertyOptional({
+    example: ShowFilter.ACTIVE,
+    enum: ShowFilter,
+  })
+  @IsOptional()
+  show?: ShowFilter;
 }

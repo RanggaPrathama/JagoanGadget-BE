@@ -20,6 +20,7 @@ import { PrefixService } from '../services/prefix.service';
 import { PaginationQueryPrefixDto } from '../dto/prefix/pagination-query-prefix.dto';
 import { CreatePrefixDto } from '../dto/prefix/create-prefix.dto';
 import { UpdatePrefixDto } from '../dto/prefix/update-prefix.dto';
+import { ShowFilter } from '@common/dto/pagination-query.dto';
 
 @ApiTags('Admin - Prefixes')
 @Controller('admin/prefixes')
@@ -31,6 +32,8 @@ export class PrefixController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'no_pagination', required: false, type: Boolean })
+  @ApiQuery({ name: 'show', required: false, type: String, enum: ShowFilter })
   async findAll(@Query() query: PaginationQueryPrefixDto) {
     const result = await this.service.findAll(query);
     if (query.no_pagination)

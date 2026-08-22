@@ -3,20 +3,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsOptional } from 'class-validator';
 
-export enum ShowFilter {
-  ALL = 'all',
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-}
 export class PaginationQueryMenuDto extends PaginationQueryDto {
-  @ApiPropertyOptional({
-    example: true,
-    description:
-      'Filter menus by active status. If true, only active menus will be returned. If false, only inactive menus will be returned. If not provided, all menus will be returned.',
-  })
-  @IsOptional()
-  show?: ShowFilter;
-
   @ApiPropertyOptional({
     example: true,
     description:

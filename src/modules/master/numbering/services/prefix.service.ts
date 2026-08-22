@@ -9,6 +9,7 @@ import {
   buildPaginationParams,
   PaginatedResult,
 } from '@common/helpers/pagination.helper';
+import { ShowFilter } from '@common/dto/pagination-query.dto';
 
 @Injectable()
 export class PrefixService {
@@ -29,6 +30,15 @@ export class PrefixService {
     const qb = this.prefixRepo.createQueryBuilder('p');
     if (search) {
       qb.andWhere('p.name ILIKE :search', { search: `%${search}%` });
+    }
+
+    switch (query.show) {
+      case ShowFilter.ACTIVE:
+        qb.andWhere('p.isActive = true');
+        break;
+      case ShowFilter.INACTIVE:
+        qb.andWhere('p.isActive = false');
+        break;
     }
     if (!noPagination) qb.skip(skip).take(limit);
     qb.orderBy('p.name', 'ASC');

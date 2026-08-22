@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   MenuEntity,
@@ -20,6 +20,7 @@ import {
 } from './services/index';
 import { PermissionEntity } from './entities/permission.entity';
 
+@Global()
 @Module({
   imports: [
     TypeOrmModule.forFeature([

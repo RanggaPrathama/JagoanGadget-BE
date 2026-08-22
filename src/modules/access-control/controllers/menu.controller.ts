@@ -14,17 +14,14 @@ import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { CreateMenuDto } from '../dto/menu/create-menu.dto';
 import { GenerateMenuCodeQueryDto } from '../dto/menu/generate-menu-code-query.dto';
 import { UpdateMenuDto } from '../dto/menu/update-menu.dto';
-import {
-  PaginationQueryMenuDto,
-  ShowFilter,
-} from '../dto/menu/pagination-query-menu.dto';
+import { PaginationQueryMenuDto } from '../dto/menu/pagination-query-menu.dto';
 import { MenuService } from '../services/menu.service';
 import { RequirePermission } from '@common/decorators/require-permission.decorator';
 import { responseSuccess } from '@common/helpers/response.helper';
 import { AuthGuard } from '@thallesp/nestjs-better-auth';
 import { PermissionGuard } from '@common/guards/permission.guard';
 import { buildPaginationMeta } from '@common/helpers/pagination.helper';
-
+import { ShowFilter } from '@common/dto/pagination-query.dto';
 @ApiTags('Admin - Menus')
 @Controller('admin/menus')
 @UseGuards(AuthGuard, PermissionGuard)

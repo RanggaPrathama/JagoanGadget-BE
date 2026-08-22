@@ -58,6 +58,7 @@ export class PermissionGuard implements CanActivate {
 
     // Check cache first, fall back to service (handles superadmin + DB query)
     const cached = await this.permissionCache.get(userId);
+    this.logger.debug({ cached }, 'Cached permissions for user');
     const permissions =
       cached ?? (await this.accessControl.getUserPermissionCodes(userId));
 
