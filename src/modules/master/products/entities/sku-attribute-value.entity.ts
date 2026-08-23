@@ -10,7 +10,9 @@ export class SkuAttributeValueEntity extends BaseEntity {
   @Column({ name: 'sku_id', type: 'uuid' })
   skuId!: string;
 
-  @ManyToOne(() => ProductSkuEntity, (sku) => sku.attributeValues, { onDelete: 'CASCADE' })
+  @ManyToOne(() => ProductSkuEntity, (sku) => sku.attributeValues, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'sku_id' })
   sku!: ProductSkuEntity;
 

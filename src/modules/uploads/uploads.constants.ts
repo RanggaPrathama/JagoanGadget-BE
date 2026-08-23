@@ -5,7 +5,7 @@ import {
   MAX_IMAGE_BYTES,
 } from '../storage/storage.constants';
 
-export const UPLOAD_PURPOSES = ['avatar', 'document'] as const;
+export const UPLOAD_PURPOSES = ['avatar', 'document', 'brands'] as const;
 export type UploadPurpose = (typeof UPLOAD_PURPOSES)[number];
 
 export interface UploadPurposeConfig {
@@ -33,6 +33,13 @@ export const UPLOAD_PURPOSE_CONFIG: Record<UploadPurpose, UploadPurposeConfig> =
       maxBytes: MAX_IMAGE_BYTES,
       allowedMimes: IMAGE_MIMES,
       finalFolder: 'users/avatars',
+      visibility: 'public',
+    },
+    brands: {
+      tempFolder: 'brands',
+      maxBytes: MAX_IMAGE_BYTES,
+      allowedMimes: IMAGE_MIMES,
+      finalFolder: 'brands',
       visibility: 'public',
     },
     document: {

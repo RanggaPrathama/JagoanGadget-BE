@@ -98,4 +98,27 @@ export class CreateMenuDto {
   @IsOptional()
   @IsUUID()
   parentId?: string | null;
+
+  @ApiProperty({
+    description:
+      'Auto-create the four CRUD permissions (view/create/update/delete) when this menu is created',
+    example: true,
+    default: true,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  createPermission?: boolean;
+
+  @ApiProperty({
+    description:
+      'Base name used for the generated permission labels (e.g. "View {permissionName}"). Falls back to the menu name when omitted',
+    example: 'Sales Order',
+    maxLength: 150,
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @Length(1, 150)
+  permissionName?: string;
 }

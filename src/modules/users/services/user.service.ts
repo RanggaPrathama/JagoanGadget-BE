@@ -203,6 +203,19 @@ export class UserService {
    */
   async remove(id: string): Promise<void> {
     const user = await this.findOne(id);
+    // delete the user's avatar file after the DB row has been deleted
+    if (user.avatarUrl) {
+      try {
+        const avatarKey = this.tempFileService.urlToRelativePath(
+          user.avatarUrl,
+        );
+        await this.tempFileService.deleteByRelativePath(avatarKey);
+      } catch {
+        this.logger.warn(
+          `Failed to delete avatar for user ${id}: ${user.avatarUrl}`,
+        );
+      }
+    }
     await this.userRepo.remove(user);
     this.logger.log(`User deleted: ${id} (${user.email})`);
   }

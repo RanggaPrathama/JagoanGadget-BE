@@ -36,7 +36,8 @@ export class StorageController {
     @Param('path') path: string | string[],
     @Res({ passthrough: true }) res: Response,
   ) {
-    const segments = Array.isArray(path) ? path : path.split('/');
+    const raw = Array.isArray(path) ? path.join('/') : path;
+    const segments = raw.split('/').filter(Boolean);
     segments.forEach(assertSafeFilename);
 
     const { stream, contentType } = await this.storageFileService.serveFile(

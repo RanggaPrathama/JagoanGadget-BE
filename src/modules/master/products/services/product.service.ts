@@ -8,8 +8,14 @@ import { AttributeEntity } from '../entities/attribute.entity';
 import { SkuAttributeValueEntity } from '../entities/sku-attribute-value.entity';
 import { CreateProductDto } from '../dto/product/create-product.dto';
 import { UpdateProductDto } from '../dto/product/update-product.dto';
-import { PaginationQueryDto, ShowFilter } from '@common/dto/pagination-query.dto';
-import { buildPaginationMeta, buildPaginationParams, PaginatedResult } from '@common/helpers/pagination.helper';
+import {
+  PaginationQueryDto,
+  ShowFilter,
+} from '@common/dto/pagination-query.dto';
+import {
+  buildPaginationParams,
+  PaginatedResult,
+} from '@common/helpers/pagination.helper';
 import { slugifyName } from '@common/helpers/slugify.helper';
 
 /** Shared left-join chain that eager-loads the full SKU matrix for a product. */
@@ -26,8 +32,10 @@ const randomSuffix = (): string => Math.random().toString(36).slice(2, 10);
 @Injectable()
 export class ProductService {
   constructor(
-    @InjectRepository(ProductEntity) private readonly repo: Repository<ProductEntity>,
-    @InjectRepository(AttributeEntity) private readonly attrRepo: Repository<AttributeEntity>,
+    @InjectRepository(ProductEntity)
+    private readonly repo: Repository<ProductEntity>,
+    @InjectRepository(AttributeEntity)
+    private readonly attrRepo: Repository<AttributeEntity>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -73,14 +81,22 @@ export class ProductService {
         if (s.images?.length) {
           await imgRepo.save(
             s.images.map((img) =>
-              imgRepo.create({ skuId: sku.id, imageUrl: img.imageUrl, isPrimary: img.isPrimary ?? false }),
+              imgRepo.create({
+                skuId: sku.id,
+                imageUrl: img.imageUrl,
+                isPrimary: img.isPrimary ?? false,
+              }),
             ),
           );
         }
         if (s.attributeValues?.length) {
           await valRepo.save(
             s.attributeValues.map((v) =>
-              valRepo.create({ skuId: sku.id, attributeId: v.attributeId, value: v.value }),
+              valRepo.create({
+                skuId: sku.id,
+                attributeId: v.attributeId,
+                value: v.value,
+              }),
             ),
           );
         }
@@ -94,13 +110,19 @@ export class ProductService {
    * @param query pagination + `search` + `show` (admin only; public forces isActive=true).
    * @param isPublic when true, only active products are returned.
    */
-  async findAll(query: PaginationQueryDto, isPublic = false): Promise<PaginatedResult<ProductEntity>> {
-    const { page, limit, skip, search, noPagination } = buildPaginationParams(query);
+  async findAll(
+    query: PaginationQueryDto,
+    isPublic = false,
+  ): Promise<PaginatedResult<ProductEntity>> {
+    const { page, limit, skip, search, noPagination } =
+      buildPaginationParams(query);
     const qb = JOIN_SKUS(this.repo.createQueryBuilder('p'));
 
     if (isPublic) qb.andWhere('p.is_active = :a', { a: true });
-    else if (query.show === ShowFilter.INACTIVE) qb.andWhere('p.is_active = :a', { a: false });
-    else if (query.show === ShowFilter.ACTIVE) qb.andWhere('p.is_active = :a', { a: true });
+    else if (query.show === ShowFilter.INACTIVE)
+      qb.andWhere('p.is_active = :a', { a: false });
+    else if (query.show === ShowFilter.ACTIVE)
+      qb.andWhere('p.is_active = :a', { a: true });
 
     if (search) qb.andWhere('p.name ILIKE :s', { s: `%${search}%` });
 
@@ -113,7 +135,10 @@ export class ProductService {
   }
 
   /** Min/max SKU price across the filtered product set ("Harga mulai dari Rp X"). */
-  async getMinMaxPrice(filter: { isActive?: boolean; search?: string }): Promise<{
+  async getMinMaxPrice(filter: {
+    isActive?: boolean;
+    search?: string;
+  }): Promise<{
     minPrice: string | null;
     maxPrice: string | null;
   }> {
@@ -123,7 +148,8 @@ export class ProductService {
       .select('MIN(sku.price)', 'min')
       .addSelect('MAX(sku.price)', 'max');
     if (filter.isActive) qb.andWhere('p.is_active = :a', { a: true });
-    if (filter.search) qb.andWhere('p.name ILIKE :s', { s: `%${filter.search}%` });
+    if (filter.search)
+      qb.andWhere('p.name ILIKE :s', { s: `%${filter.search}%` });
     const raw = await qb.getRawOne();
     return { minPrice: raw?.min ?? null, maxPrice: raw?.max ?? null };
   }
@@ -135,11 +161,11 @@ export class ProductService {
         .createQueryBuilder('p')
         .leftJoinAndSelect('p.category', 'cat')
         .leftJoinAndSelect('p.brand', 'brand'),
-    )
-      .where('p.slug = :slug', { slug });
+    ).where('p.slug = :slug', { slug });
     if (isPublic) qb.andWhere('p.is_active = :a', { a: true });
     const product = await qb.getOne();
-    if (!product) throw new NotFoundException(`Product slug "${slug}" not found`);
+    if (!product)
+      throw new NotFoundException(`Product slug "${slug}" not found`);
     return product;
   }
 
@@ -162,7 +188,8 @@ export class ProductService {
     const product = await this.findOne(id);
     if (dto.name !== undefined && dto.name !== product.name) {
       let slug = slugifyName(dto.name);
-      if (await this.repo.findOne({ where: { slug } })) slug = `${slug}-${randomSuffix()}`;
+      if (await this.repo.findOne({ where: { slug } }))
+        slug = `${slug}-${randomSuffix()}`;
       product.slug = slug;
       product.name = dto.name;
     }

@@ -9,12 +9,14 @@ import {
   buildPaginationParams,
   PaginatedResult,
 } from '@common/helpers/pagination.helper';
+import { TempFileService } from '@module/uploads/services/temp-file.service';
 
 @Injectable()
 export class BrandService {
   constructor(
     @InjectRepository(BrandEntity)
     private readonly repo: Repository<BrandEntity>,
+    private readonly tempFileService: TempFileService,
   ) {}
 
   /**
@@ -53,8 +55,16 @@ export class BrandService {
   async create(dto: CreateBrandDto): Promise<BrandEntity> {
     const brand = this.repo.create({
       name: dto.name,
-      logoUrl: dto.logoUrl ?? null,
     });
+
+    let logoUrl: string | null = dto.logoUrl ?? null;
+
+    if (logoUrl) {
+      logoUrl = await this.tempFileService.promote(logoUrl);
+    }
+
+    brand.logoUrl = logoUrl;
+
     return this.repo.save(brand);
   }
 
@@ -65,8 +75,21 @@ export class BrandService {
    */
   async update(id: string, dto: UpdateBrandDto): Promise<BrandEntity> {
     const brand = await this.findOne(id);
+    if (!brand) throw new NotFoundException(`Brand ${id} not found`);
     if (dto.name !== undefined) brand.name = dto.name;
-    if (dto.logoUrl !== undefined) brand.logoUrl = dto.logoUrl ?? null;
+
+    const oldLogoUrl = brand.logoUrl;
+    if (dto.logoUrl) {
+      const newLogoUrl = await this.tempFileService.promote(dto.logoUrl);
+      brand.logoUrl = newLogoUrl;
+    }
+
+    // If the logoUrl was changed, delete the old file from storage.
+    if (oldLogoUrl && oldLogoUrl !== brand.logoUrl) {
+      await this.tempFileService.deleteByRelativePath(
+        this.tempFileService.urlToRelativePath(oldLogoUrl),
+      );
+    }
     return this.repo.save(brand);
   }
 

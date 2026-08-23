@@ -226,8 +226,13 @@ export class MenuService {
 
     const savedMenu = await this.menuRepo.save(menu);
 
-    // Sync permissions for the new menu
-    if (dto.type === 'menu') await this.syncMenuPermissions(savedMenu, dto);
+    // Sync permissions for the new menu (skipped when createPermission is false)
+    if (dto.type === 'menu' && dto.createPermission !== false) {
+      await this.syncMenuPermissions(savedMenu, {
+        name: dto.name,
+        permissionName: dto.permissionName,
+      });
+    }
 
     return savedMenu;
   }
@@ -300,17 +305,16 @@ export class MenuService {
       ...(dto.type === 'group' && { route: null }),
     });
 
-    console.log('Updating menu:', {
-      id,
-      name: menu.name,
-      code: menu.code,
-      parentId: menu.parentId,
-    });
-
     const savedMenu = await this.menuRepo.save(menu);
 
     // Re-fetch to get fresh relations (TypeORM doesn't rehydrate after save)
     const updatedMenu = await this.findOne(savedMenu.id);
+
+    // Sync is skipped when createPermission is explicitly false (soft: never
+    // delete already-linked permissions). Group→menu checks this too; menu→group
+    // delete is a structural change and always runs regardless of the flag.
+    const shouldSync =
+      dto.createPermission !== false && updatedMenu.type === 'menu';
 
     // Handle type change scenarios
     const typeChanged = dto.type && dto.type !== oldType;
@@ -318,24 +322,20 @@ export class MenuService {
       if (dto.type === 'group') {
         // Changed to group: delete all associated permissions
         await this.permRepo.delete({ menuId: id });
-      } else if (dto.type === 'menu') {
+      } else if (dto.type === 'menu' && shouldSync) {
         // Changed from group to menu: generate CRUD permissions
         await this.syncMenuPermissions(updatedMenu, {
           name: updatedMenu.name,
-          code: updatedMenu.code,
+          permissionName: dto.permissionName,
         });
       }
     }
 
     // Sync permission names/codes when menu name or code changes (only for menus)
-    if (
-      (nameChanged || codeChanged) &&
-      updatedMenu.type === 'menu' &&
-      !typeChanged
-    ) {
+    if ((nameChanged || codeChanged) && !typeChanged && shouldSync) {
       await this.syncMenuPermissions(updatedMenu, {
         name: updatedMenu.name,
-        code: updatedMenu.code,
+        permissionName: dto.permissionName,
       });
     }
 

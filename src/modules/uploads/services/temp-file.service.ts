@@ -1,4 +1,10 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { randomUUID } from 'node:crypto';
@@ -10,7 +16,7 @@ import { StorageFileService } from '../../storage/services/storage-file.service'
 import { TEMP_KEY_REGEX, UPLOAD_PURPOSE_CONFIG } from '../uploads.constants';
 
 @Injectable()
-export class TempFileService {
+export class TempFileService implements OnModuleInit {
   private readonly logger = new Logger(TempFileService.name);
   private readonly storageRoot: string;
   private readonly tempTtlHours: number;
@@ -27,6 +33,16 @@ export class TempFileService {
     this.tempTtlHours =
       this.configService.get<AppConfig['storage']>('storage')?.tempTtlHours ??
       24;
+  }
+
+  /**
+   * Emit a heartbeat at boot so operators can confirm the hourly temp-cleanup
+   * scheduler is registered and running. Routed through the app's Pino logger.
+   */
+  onModuleInit(): void {
+    this.logger.log(
+      `Temp sweep scheduler ACTIVE | interval: 1h, TTL: ${this.tempTtlHours}h, root: ${join(this.storageRoot, 'temp')}`,
+    );
   }
 
   /**

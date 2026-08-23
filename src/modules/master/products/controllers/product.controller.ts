@@ -32,6 +32,10 @@ export class ProductController {
   @Get(':slug')
   @AllowAnonymous()
   async findBySlug(@Param('slug') slug: string) {
-    return responseSuccess(true, 'Product retrieved', await this.service.findOneBySlug(slug, true));
+    return responseSuccess(
+      true,
+      'Product retrieved',
+      await this.service.findOneBySlug(slug, true),
+    );
   }
 }

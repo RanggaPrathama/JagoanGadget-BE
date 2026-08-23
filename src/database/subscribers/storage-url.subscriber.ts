@@ -8,85 +8,107 @@ import {
   UpdateEvent,
 } from 'typeorm';
 import type { AppConfig } from '@config/configuration';
-import { UserEntity } from '@module/users/entities/user.entity';
 import {
   isRelativeStorageKey,
   prefixStorageUrl,
   stripStoragePrefix,
 } from '../../common/helpers/storage-url.helper';
+import { getStorageUrlColumns } from '@common/decorators/storage-url.decorator';
 
 /**
- * Keeps `avatar_url` (and future storage-key columns) relative in the DB while
- * returning a fully-qualified URL to clients.
+ * Keeps storage-key columns relative in the DB while returning fully-qualified
+ * URLs to clients. Columns opt in via the `@StorageUrl()` decorator (registry
+ * read via reflect-metadata), so this subscriber is generic — no per-entity
+ * hardcoding.
  * - `afterLoad`  → prefix the configured storage base URL onto relative keys;
- *   `null`/empty → default avatar (static asset under `public/`).
- * - `beforeInsert`/`beforeUpdate` → strip the prefix back off for storage in the DB.
+ *   `null`/empty with a `defaultConfigKey` → that configured default image.
+ * - `beforeInsert`/`beforeUpdate` → strip the prefix back off for storage in the DB
+ *   (a default URL is written back as `null`).
  */
 @Injectable()
 @EventSubscriber()
-export class StorageUrlSubscriber implements EntitySubscriberInterface<UserEntity> {
+export class StorageUrlSubscriber implements EntitySubscriberInterface {
   private readonly storagePrefix: string;
-  private readonly defaultAvatarUrl: string;
+  private readonly baseUrl: string;
+  private readonly storage: AppConfig['storage'] | undefined;
 
   constructor(dataSource: DataSource, configService: ConfigService<AppConfig>) {
     const storage = configService.get<AppConfig['storage']>('storage');
     const app = configService.get<AppConfig['app']>('app');
-    const baseUrl = app?.baseUrl ?? 'http://localhost:3000';
+    this.baseUrl = app?.baseUrl ?? 'http://localhost:3000';
 
     this.storagePrefix = (
-      storage?.publicUrl ?? `${baseUrl}/api/storage`
+      storage?.publicUrl ?? `${this.baseUrl}/api/storage`
     ).replace(/\/+$/, '');
 
-    this.defaultAvatarUrl = this.resolveDefaultAvatar(
-      baseUrl,
-      storage?.defaultAvatar,
-    );
+    this.storage = storage;
 
     dataSource.subscribers.push(this);
   }
 
-  listenTo(): typeof UserEntity {
-    return UserEntity;
+  /** Listen to every entity; per-column work is filtered by the @StorageUrl registry. */
+  listenTo(): typeof Object {
+    return Object;
   }
 
-  afterLoad(entity: UserEntity): void {
-    if (isRelativeStorageKey(entity.avatarUrl)) {
-      entity.avatarUrl = prefixStorageUrl(entity.avatarUrl, this.storagePrefix);
-      return;
+  afterLoad(entity: any): void {
+    for (const { property, defaultConfigKey } of getStorageUrlColumns(
+      entity.constructor,
+    )) {
+      const value = entity[property];
+      if (isRelativeStorageKey(value)) {
+        entity[property] = prefixStorageUrl(value, this.storagePrefix);
+        continue;
+      }
+      // Absolute URL (legacy full URL or external) — leave untouched.
+      if (value) continue;
+      // null / empty → default image only when one is configured.
+      if (defaultConfigKey) {
+        entity[property] = this.resolveDefault(
+          this.storage?.[defaultConfigKey as keyof typeof this.storage] as
+            | string
+            | undefined,
+        );
+      }
     }
-    // Absolute URL (legacy full URL or external) — leave untouched.
-    if (entity.avatarUrl) return;
-    // null / empty → default avatar.
-    entity.avatarUrl = this.defaultAvatarUrl;
   }
 
-  beforeInsert(event: InsertEvent<UserEntity>): void {
-    event.entity.avatarUrl = this.normalizeForWrite(event.entity.avatarUrl);
+  beforeInsert(event: InsertEvent<any>): void {
+    this.normalizeAll(event.entity);
   }
 
-  beforeUpdate(event: UpdateEvent<UserEntity>): void {
-    const entity = event.entity;
-    if (entity && typeof entity.avatarUrl === 'string') {
-      entity.avatarUrl = this.normalizeForWrite(entity.avatarUrl);
-    }
+  beforeUpdate(event: UpdateEvent<any>): void {
+    if (event.entity) this.normalizeAll(event.entity);
   }
 
   /**
-   * Reduce a client-facing value back to its DB form:
-   * default URL → null, storage-prefixed → relative key, external → as-is.
+   * Reduce client-facing values back to their DB form: a default URL → null,
+   * storage-prefixed → relative key, external → as-is. Columns without a
+   * `defaultConfigKey` never get a default substituted.
    */
-  private normalizeForWrite(value: string | null): string | null {
-    if (typeof value !== 'string') return value;
-    if (value === this.defaultAvatarUrl) return null;
-    return stripStoragePrefix(value, this.storagePrefix);
+  private normalizeAll(entity: any): void {
+    for (const { property, defaultConfigKey } of getStorageUrlColumns(
+      entity.constructor,
+    )) {
+      const value = entity[property];
+      if (typeof value !== 'string') continue;
+      const def = defaultConfigKey
+        ? this.resolveDefault(
+            this.storage?.[defaultConfigKey as keyof typeof this.storage] as
+              | string
+              | undefined,
+          )
+        : null;
+      entity[property] =
+        def && value === def
+          ? null
+          : stripStoragePrefix(value, this.storagePrefix);
+    }
   }
 
-  private resolveDefaultAvatar(
-    baseUrl: string,
-    configured: string | undefined,
-  ): string {
+  private resolveDefault(configured?: string): string {
     const path = configured?.trim() || '/image/default-user.png';
     if (/^https?:\/\//i.test(path)) return path;
-    return `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
+    return `${this.baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
   }
 }

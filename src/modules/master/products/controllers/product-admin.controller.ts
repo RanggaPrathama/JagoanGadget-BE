@@ -1,4 +1,15 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Put, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AuthGuard } from '@thallesp/nestjs-better-auth';
 import { PermissionGuard } from '@common/guards/permission.guard';
@@ -20,7 +31,12 @@ export class ProductAdminController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
-  @ApiQuery({ name: 'show', required: false, type: String, enum: ['active', 'inactive'] })
+  @ApiQuery({
+    name: 'show',
+    required: false,
+    type: String,
+    enum: ['active', 'inactive'],
+  })
   async findAll(@Query() query: PaginationQueryProductDto) {
     const result = await this.service.findAll(query, false);
     return responseSuccess(
@@ -33,21 +49,36 @@ export class ProductAdminController {
 
   @Get(':id')
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return responseSuccess(true, 'Product retrieved', await this.service.findOne(id));
+    return responseSuccess(
+      true,
+      'Product retrieved',
+      await this.service.findOne(id),
+    );
   }
 
   @Post()
   @ApiBearerAuth('bearerAuth')
   @RequirePermission('product.create')
   async create(@Body() dto: CreateProductDto) {
-    return responseSuccess(true, 'Product created', await this.service.createProduct(dto));
+    return responseSuccess(
+      true,
+      'Product created',
+      await this.service.createProduct(dto),
+    );
   }
 
   @Put(':id')
   @ApiBearerAuth('bearerAuth')
   @RequirePermission('product.update')
-  async update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateProductDto) {
-    return responseSuccess(true, 'Product updated', await this.service.update(id, dto));
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateProductDto,
+  ) {
+    return responseSuccess(
+      true,
+      'Product updated',
+      await this.service.update(id, dto),
+    );
   }
 
   @Delete(':id')

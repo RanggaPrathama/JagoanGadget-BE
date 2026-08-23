@@ -114,6 +114,7 @@ export class AccessControlService {
     if (isSuper) {
       const allMenus = await this.menuRepo.find({
         relations: ['permissions'],
+        where: { isActive: true },
         order: { sortOrder: 'ASC', name: 'ASC' },
       });
 
@@ -154,6 +155,7 @@ export class AccessControlService {
 
     // Load all menus (flat)
     const allMenus = await this.menuRepo.find({
+      where: { isActive: true },
       order: { sortOrder: 'ASC', name: 'ASC' },
     });
 

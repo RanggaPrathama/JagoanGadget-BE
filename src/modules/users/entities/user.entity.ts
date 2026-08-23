@@ -2,6 +2,7 @@ import { Column, Entity, Index, OneToMany } from 'typeorm';
 import { SessionEntity } from './session.entity';
 import { AccountEntity } from './account.entity';
 import { UserRoleEntity } from '../../access-control/entities/user-role.entity';
+import { StorageUrl } from '@common/decorators/storage-url.decorator';
 
 /**
  * Single `user` table — managed by Better Auth for auth,
@@ -25,6 +26,7 @@ export class UserEntity {
   @Column({ name: 'phone_number', length: 30, nullable: true })
   phoneNumber!: string | null;
 
+  @StorageUrl({ defaultConfigKey: 'defaultAvatar' })
   @Column({ name: 'avatar_url', length: 255, nullable: true })
   avatarUrl!: string | null;
 

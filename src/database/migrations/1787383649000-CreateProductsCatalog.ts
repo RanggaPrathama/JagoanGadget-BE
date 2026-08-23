@@ -22,9 +22,15 @@ export class CreateProductsCatalog1787383649000 implements MigrationInterface {
     await queryRunner.query(
       `CREATE TABLE "products" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "brand_id" uuid, "category_id" uuid NOT NULL, "name" character varying(150) NOT NULL, "slug" character varying(160) NOT NULL, "description" text, "is_active" boolean NOT NULL DEFAULT true, CONSTRAINT "PK_products" PRIMARY KEY ("id"))`,
     );
-    await queryRunner.query(`CREATE INDEX "IDX_products_category_id" ON "products" ("category_id")`);
-    await queryRunner.query(`CREATE INDEX "IDX_products_name" ON "products" ("name")`);
-    await queryRunner.query(`CREATE UNIQUE INDEX "UQ_products_slug" ON "products" ("slug")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_products_category_id" ON "products" ("category_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_products_name" ON "products" ("name")`,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "UQ_products_slug" ON "products" ("slug")`,
+    );
 
     // Physical sellable unit (price belongs to SKU)
     await queryRunner.query(
@@ -69,12 +75,24 @@ export class CreateProductsCatalog1787383649000 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`ALTER TABLE "sku_attribute_values" DROP CONSTRAINT "FK_sku_attr_attribute"`);
-    await queryRunner.query(`ALTER TABLE "sku_attribute_values" DROP CONSTRAINT "FK_sku_attr_sku"`);
-    await queryRunner.query(`ALTER TABLE "product_images" DROP CONSTRAINT "FK_product_images_sku"`);
-    await queryRunner.query(`ALTER TABLE "product_skus" DROP CONSTRAINT "FK_product_skus_product"`);
-    await queryRunner.query(`ALTER TABLE "products" DROP CONSTRAINT "FK_products_category"`);
-    await queryRunner.query(`ALTER TABLE "products" DROP CONSTRAINT "FK_products_brand"`);
+    await queryRunner.query(
+      `ALTER TABLE "sku_attribute_values" DROP CONSTRAINT "FK_sku_attr_attribute"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "sku_attribute_values" DROP CONSTRAINT "FK_sku_attr_sku"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "product_images" DROP CONSTRAINT "FK_product_images_sku"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "product_skus" DROP CONSTRAINT "FK_product_skus_product"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "products" DROP CONSTRAINT "FK_products_category"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "products" DROP CONSTRAINT "FK_products_brand"`,
+    );
     await queryRunner.query(`DROP INDEX "public"."UQ_sku_attr"`);
     await queryRunner.query(`DROP TABLE "sku_attribute_values"`);
     await queryRunner.query(`DROP TABLE "product_images"`);

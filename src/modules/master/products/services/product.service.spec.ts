@@ -55,8 +55,14 @@ describe('ProductService', () => {
         ProductService,
         { provide: getRepositoryToken(ProductEntity), useValue: repos.product },
         { provide: getRepositoryToken(ProductSkuEntity), useValue: repos.sku },
-        { provide: getRepositoryToken(ProductImageEntity), useValue: repos.image },
-        { provide: getRepositoryToken(SkuAttributeValueEntity), useValue: repos.value },
+        {
+          provide: getRepositoryToken(ProductImageEntity),
+          useValue: repos.image,
+        },
+        {
+          provide: getRepositoryToken(SkuAttributeValueEntity),
+          useValue: repos.value,
+        },
         { provide: getRepositoryToken(AttributeEntity), useValue: repos.attr },
         { provide: DataSource, useValue: dataSource },
       ],
@@ -92,7 +98,9 @@ describe('ProductService', () => {
       const dto: CreateProductDto = {
         categoryId: 'cat-1',
         name: 'iPhone 15',
-        skus: [{ skuCode: 'X', variantName: 'v', price: 1, attributeValues: [] }],
+        skus: [
+          { skuCode: 'X', variantName: 'v', price: 1, attributeValues: [] },
+        ],
       };
       await expect(service.createProduct(dto)).rejects.toThrow('db fail');
     });
@@ -196,7 +204,11 @@ describe('ProductService', () => {
         };
         return qb;
       });
-      repos.product.save.mockResolvedValue({ ...existing, name: 'New', slug: 'new' });
+      repos.product.save.mockResolvedValue({
+        ...existing,
+        name: 'New',
+        slug: 'new',
+      });
       await service.update('p1', { name: 'New' } as any);
       expect(repos.sku.save).not.toHaveBeenCalled();
       expect(repos.product.save).toHaveBeenCalled();
