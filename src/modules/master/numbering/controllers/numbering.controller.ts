@@ -85,14 +85,13 @@ export class NumberingController {
     return responseSuccess(true, 'Number format deleted');
   }
 
-  @Post(':id/generate-next')
-  @ApiBearerAuth('bearerAuth')
-  @RequirePermission('number-format.update')
-  async generateNext(@Param('id', ParseUUIDPipe) id: string) {
-    return responseSuccess(
-      true,
-      'Number generated',
-      await this.service.generateNext(id),
-    );
+  /**
+   * Dry-run preview of the next number. Does NOT consume any sequence counter.
+   */
+  @Get(':id/preview')
+  async preview(@Param('id', ParseUUIDPipe) id: string) {
+    return responseSuccess(true, 'Number preview generated', {
+      preview: await this.service.preview(id),
+    });
   }
 }

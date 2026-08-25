@@ -11,6 +11,7 @@ export interface PaginationParams {
   skip: number;
   search?: string;
   noPagination: boolean;
+  show?: string;
 }
 
 export interface PaginatedResult<T> {
@@ -33,6 +34,7 @@ export function buildPaginationParams(
     skip: (page - 1) * limit,
     search,
     noPagination: query.no_pagination ?? false,
+    show: query.show ?? undefined,
   };
 }
 

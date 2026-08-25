@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  ArrayMaxSize,
+  ArrayMinSize,
   IsArray,
   IsBoolean,
   IsOptional,
@@ -24,6 +26,8 @@ export class CreateNumberFormatDto {
     type: [SegmentDto],
   })
   @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(20)
   @ValidateNested({ each: true })
   @Type(() => SegmentDto)
   segments!: SegmentDto[];

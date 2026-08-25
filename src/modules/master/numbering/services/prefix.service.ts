@@ -1,9 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PaginationQueryPrefixDto } from '../dto/prefix/pagination-query-prefix.dto';
 import { CreatePrefixDto } from '../dto/prefix/create-prefix.dto';
 import { UpdatePrefixDto } from '../dto/prefix/update-prefix.dto';
+import { NumberFormatSegmentEntity } from '../entities/number_format_d.entity';
 import { PrefixEntity } from '../entities/prefix.entity';
 import {
   buildPaginationParams,
@@ -16,6 +21,8 @@ export class PrefixService {
   constructor(
     @InjectRepository(PrefixEntity)
     private readonly prefixRepo: Repository<PrefixEntity>,
+    @InjectRepository(NumberFormatSegmentEntity)
+    private readonly segRepo: Repository<NumberFormatSegmentEntity>,
   ) {}
 
   /**
@@ -78,10 +85,16 @@ export class PrefixService {
   }
 
   /**
-   * Delete a prefix by id.
+   * Delete a prefix by id. Blocked while any number format segment still
+   * references it (FK RESTRICT is the race-window backstop).
    */
   async remove(id: string): Promise<void> {
     const p = await this.findOne(id);
+    const used = await this.segRepo.count({ where: { prefixId: id } });
+    if (used > 0)
+      throw new BadRequestException(
+        `Prefix "${p.name}" masih dipakai oleh ${used} number format segment`,
+      );
     await this.prefixRepo.remove(p);
   }
 }

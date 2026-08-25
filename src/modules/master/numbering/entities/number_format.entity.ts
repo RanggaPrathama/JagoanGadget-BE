@@ -23,6 +23,9 @@ export class NumberFormatEntity extends BaseEntity {
   @Column({ name: 'menu_id', type: 'uuid', nullable: true })
   menuId?: string | null;
 
+  @Column({ name: 'preview', type: 'varchar', length: 255 })
+  preview!: string;
+
   @OneToMany(() => NumberFormatSegmentEntity, (seg) => seg.numberFormat, {
     cascade: true,
   })

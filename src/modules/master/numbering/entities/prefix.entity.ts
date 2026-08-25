@@ -1,5 +1,6 @@
-import { Column, Entity, Index } from 'typeorm';
+import { Column, Entity, Index, OneToMany } from 'typeorm';
 import { BaseEntity } from '@common/entities/base.entity';
+import { NumberFormatSegmentEntity } from './number_format_d.entity';
 
 export enum TypePrefix {
   SEQUENCE = 'sequence',
@@ -11,7 +12,7 @@ export enum TypePrefix {
 
 @Entity({ name: 'prefix' })
 export class PrefixEntity extends BaseEntity {
-  @Index('IDX_prefix_name')
+  @Index('UQ_prefix_name', { unique: true })
   @Column({ length: 30 })
   name!: string;
 
@@ -23,4 +24,7 @@ export class PrefixEntity extends BaseEntity {
 
   @Column({ name: 'is_active', default: true })
   isActive!: boolean;
+
+  @OneToMany(() => NumberFormatSegmentEntity, (segment) => segment.prefix)
+  segments!: NumberFormatSegmentEntity[];
 }
