@@ -12,7 +12,11 @@ import { SegmentDto } from '../dto/number-format/segment.dto';
 import { NumberFormatEntity } from '../entities/number_format.entity';
 import { NumberFormatSegmentEntity } from '../entities/number_format_d.entity';
 import { PrefixEntity, TypePrefix } from '../entities/prefix.entity';
-import { buildPreview, renderSegment } from '../helpers/segment-value.helper';
+import {
+  buildPreview,
+  renderSegment,
+  sequenceWidth,
+} from '../helpers/segment-value.helper';
 import {
   buildPaginationParams,
   PaginatedResult,
@@ -142,12 +146,25 @@ export class NumberingService {
 
   /**
    * Dry-run: build an example number from the format's segments WITHOUT
-   * consuming any sequence counter. SEQUENCE shows last+1 as a sample.
+   * reading any transaction table. SEQUENCE shows a zero-padded sample
+   * (e.g. "0001") based on the configured width.
    * @returns the example string
    */
   async preview(id: string): Promise<string> {
     const nf = await this.findOne(id);
+    if (!nf.isActive)
+      throw new BadRequestException(
+        'NumberFormat is inactive — cannot preview',
+      );
     return buildPreview(nf.segments);
+  }
+
+  private quoteIdentifier(name: string): string {
+    if (!/^[a-z_][a-z0-9_]*$/.test(name)) {
+      throw new BadRequestException(`Invalid table name "${name}"`);
+    }
+    // Double any embedded quotes (regex above already forbids them).
+    return `"${name.replace(/"/g, '""')}"`;
   }
 
   /**
@@ -166,7 +183,7 @@ export class NumberingService {
   async nextDocumentNumber(menuCode: string): Promise<{ number: string }> {
     const nf = await this.nfRepo.findOne({
       where: { menu: { code: menuCode } },
-      relations: ['segments', 'segments.prefix'],
+      relations: ['menu', 'segments', 'segments.prefix'],
     });
     if (!nf)
       throw new NotFoundException(
@@ -177,57 +194,66 @@ export class NumberingService {
 
   /**
    * Build the next formatted number from ordered segments.
-   * SEQUENCE prefix rows are locked pessimistically inside the transaction
-   * (deterministic order -> no deadlock across formats sharing prefixes),
-   * so concurrent calls can never observe the same counter value.
-   * @throws BadRequestException if the format or any referenced prefix is inactive/missing.
+   * The SEQUENCE value is derived from the transaction table linked to the
+   * format's menu (menu.code = table name): we render the non-sequence prefix
+   * (e.g. "WH-20260827-"), then take the max existing code, extract its
+   * trailing number, and increment. Because the date parts are baked into the
+   * prefix, the counter naturally resets to 1 whenever the date changes.
+   * @throws BadRequestException if the format/inactive, no menu table, or
+   *         invalid sequence width.
    */
   private async generate(nf: NumberFormatEntity): Promise<{ number: string }> {
     if (!nf.isActive) throw new BadRequestException('NumberFormat is inactive');
 
     const segments = [...nf.segments].sort((a, b) => a.index - b.index);
-    const seqIds = segments
-      .filter((s) => s.prefix.type === TypePrefix.SEQUENCE)
-      .map((s) => s.prefixId)
-      .sort(); // deterministic lock order
+    const seqSegs = segments.filter(
+      (s) => s.prefix?.type === TypePrefix.SEQUENCE,
+    );
+    for (const seg of segments) {
+      if (!seg.prefix?.isActive)
+        throw new BadRequestException(
+          `Prefix ${seg.prefixId} is missing or inactive`,
+        );
+    }
+    if (seqSegs.length > 1)
+      throw new BadRequestException('Only one SEQUENCE segment is supported');
+
+    const now = new Date();
+    const prefix = segments
+      .filter((s) => s.prefix.type !== TypePrefix.SEQUENCE)
+      .map((s) => renderSegment(s.prefix, now))
+      .join('');
+
+    // Format without a SEQUENCE segment — just the constant prefix.
+    if (!seqSegs.length) return { number: prefix };
+
+    const seq = seqSegs[0].prefix!;
+    const width = sequenceWidth(seq.value);
+    const table = nf.menu?.code?.trim();
+    if (!table)
+      throw new BadRequestException(
+        'NumberFormat with SEQUENCE segment must be linked to a menu',
+      );
+    const quotedTable = this.quoteIdentifier(table);
 
     return this.dataSource.transaction(async (manager) => {
-      let lockedSeq = new Map<string, PrefixEntity>();
-      if (seqIds.length) {
-        const rows = await manager
-          .getRepository(PrefixEntity)
-          .createQueryBuilder('p')
-          .setLock('pessimistic_write')
-          .where('p.id IN (:...ids)', { ids: seqIds })
-          .orderBy('p.id', 'ASC')
-          .getMany();
-        lockedSeq = new Map(rows.map((p) => [p.id, p]));
-        if (lockedSeq.size !== seqIds.length)
-          throw new BadRequestException('One or more prefixes were deleted');
-      }
+      // Parameterized LIKE pattern; table name validated + quoted separately.
+      const rows: { code: string }[] | null = await manager.query(
+        `SELECT "code" FROM ${quotedTable}
+         WHERE "code" LIKE $1
+         ORDER BY "code" DESC
+         LIMIT 1`,
+        [`${prefix}%`],
+      );
 
-      const now = new Date();
-      const parts: string[] = [];
-      for (const seg of segments) {
-        if (!seg.prefix?.isActive)
-          throw new BadRequestException(
-            `Prefix ${seg.prefixId} is missing or inactive`,
-          );
-
-        if (seg.prefix.type === TypePrefix.SEQUENCE) {
-          // authoritative value re-read under lock above
-          const current = lockedSeq.get(seg.prefixId)!;
-          const width = Math.max(current.value.length, 1);
-          const next = (Number.parseInt(current.value, 10) || 0) + 1;
-          const padded = String(next).padStart(width, '0');
-          current.value = padded; // persist PADDED — width never shrinks
-          await manager.getRepository(PrefixEntity).save(current);
-          parts.push(padded);
-        } else {
-          parts.push(renderSegment(seg.prefix, now));
-        }
-      }
-      return { number: parts.join('') };
+      const lastStr = rows && rows.length ? rows[0]?.code : undefined;
+      const last = Number.parseInt(
+        typeof lastStr === 'string' ? lastStr.slice(prefix.length) : '',
+        10,
+      );
+      const next = Number.isFinite(last) ? last + 1 : 1;
+      const padded = String(next).padStart(width, '0');
+      return { number: prefix + padded };
     });
   }
 

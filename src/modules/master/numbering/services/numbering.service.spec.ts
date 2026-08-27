@@ -87,16 +87,22 @@ describe('buildPreview via service', () => {
     service = new NumberingService(nfRepo, prefixRepo, dataSource);
   };
 
-  it('renders sequence sample zero-padded without consuming', async () => {
-    const seq = makePrefix();
+  it('renders sequence sample zero-padded from configured width', async () => {
+    const seq = makePrefix({ value: '4' });
     wire(makeFormat([makeSegment(0, seq)]));
     await expect(service.preview('nf-1')).resolves.toBe('0001');
   });
 
-  it('rolls sequence width correctly: 0099 -> 0100', async () => {
-    const seq = makePrefix({ value: '0099' });
+  it('uses value as digit count: value "6" -> width 6', async () => {
+    const seq = makePrefix({ value: '6' });
     wire(makeFormat([makeSegment(0, seq)]));
-    await expect(service.preview('nf-1')).resolves.toBe('0100');
+    await expect(service.preview('nf-1')).resolves.toBe('000001');
+  });
+
+  it('falls back to width 4 for non-numeric sequence value', async () => {
+    const seq = makePrefix({ value: 'abc' });
+    wire(makeFormat([makeSegment(0, seq)]));
+    await expect(service.preview('nf-1')).resolves.toBe('0001');
   });
 
   it('renders YEAR/MONTH/DAY from current date', async () => {
@@ -118,8 +124,12 @@ describe('buildPreview via service', () => {
         makeSegment(1, month),
       ]),
     );
+    const now = new Date();
     await expect(service.preview('nf-1')).resolves.toBe(
-      `${NOW.getFullYear()}08${NOW.getDate()}`,
+      `${now.getFullYear()}${String(now.getMonth() + 1).padStart(
+        2,
+        '0',
+      )}${String(now.getDate()).padStart(2, '0')}`,
     );
   });
 
@@ -236,89 +246,155 @@ describe('NumberingService.create/update', () => {
 });
 
 describe('NumberingService.generate', () => {
+  const makeMenu = (code: string | null) =>
+    ({ id: 'm-1', name: 'Menu', code }) as any;
+
+  const makeFormatMenu = (
+    segments: NumberFormatSegmentEntity[],
+    menuCode: string | null,
+    isActive = true,
+  ): NumberFormatEntity =>
+    ({
+      id: 'nf-1',
+      isActive,
+      preview: '',
+      menu: menuCode ? makeMenu(menuCode) : null,
+      segments,
+    }) as NumberFormatEntity;
+
   const setup = (
     format: NumberFormatEntity | null,
-    prefixes: PrefixEntity[],
+    rows: { code: string }[] | null = [],
   ) => {
-    const { manager, prefixRepo } = createManager();
-    mockQb.getMany.mockReset();
-    mockQb.getMany.mockResolvedValue(
-      prefixes.filter((p) => p.type === TypePrefix.SEQUENCE),
-    );
-
+    const manager = {
+      query: jest.fn().mockResolvedValue(rows),
+    };
     const nfRepo = {
       findOne: jest.fn().mockResolvedValue(format),
     } as any;
     const dataSource = {
       transaction: jest.fn().mockImplementation((fn: any) => fn(manager)),
-    };
-    const service = new NumberingService(
-      nfRepo,
-      { find: jest.fn().mockResolvedValue(prefixes) } as any,
-      dataSource,
-    );
-    return { service, manager, prefixRepo };
+    } as any;
+    const service = new NumberingService(nfRepo, {} as any, dataSource);
+    return { service, manager };
   };
 
-  it('increments, pads, persists padded value, joins parts', async () => {
-    const seq = makePrefix({ id: 'seq-a', value: '0999' });
+  it('increments from the max existing code', async () => {
+    const seq = makePrefix({ id: 'seq-a', value: '4' });
     const lit = makePrefix({
       id: 'lit-a',
       type: TypePrefix.TEXT,
-      value: 'INV-',
+      value: 'WH-',
     });
     const year = makePrefix({ id: 'year-a', type: TypePrefix.YEAR, value: '' });
+    const month = makePrefix({
+      id: 'month-a',
+      type: TypePrefix.MONTH,
+      value: '',
+    });
+    const day = makePrefix({ id: 'day-a', type: TypePrefix.DAY, value: '' });
+    const now = new Date();
+    const ymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(
+      2,
+      '0',
+    )}${String(now.getDate()).padStart(2, '0')}`;
+    const prefixText = `WH-${ymd}`;
     const { service, manager } = setup(
-      makeFormat([
-        makeSegment(0, lit),
-        makeSegment(1, year),
-        makeSegment(2, seq),
-      ]),
-      [seq],
+      makeFormatMenu(
+        [
+          makeSegment(0, lit),
+          makeSegment(1, year),
+          makeSegment(2, month),
+          makeSegment(3, day),
+          makeSegment(4, seq),
+        ],
+        'warehouse',
+      ),
+      [{ code: `${prefixText}0003` }],
     );
 
     const res = await service.generateNext('nf-1');
 
-    expect(res.number).toBe(`INV-${NOW.getFullYear()}1000`);
-    // persisted value is the PADDED next (4-digit width kept)
-    const prefixRepo = manager.getRepository(PrefixEntity);
-    const saved = (prefixRepo.save as jest.Mock).mock
-      .calls[0][0] as PrefixEntity;
-    expect(saved.value).toBe('1000');
+    expect(res.number).toBe(`${prefixText}0004`);
+    expect(manager.query).toHaveBeenCalledWith(
+      expect.stringContaining('"warehouse"'),
+      [`${prefixText}%`],
+    );
+  });
+
+  it('starts at 0001 when no matching row exists (auto date reset)', async () => {
+    const seq = makePrefix({ id: 'seq-a', value: '4' });
+    const lit = makePrefix({
+      id: 'lit-a',
+      type: TypePrefix.TEXT,
+      value: 'WH-',
+    });
+    const { service } = setup(
+      makeFormatMenu([makeSegment(0, lit), makeSegment(1, seq)], 'warehouse'),
+      [],
+    );
+
+    await expect(service.generateNext('nf-1')).resolves.toEqual({
+      number: 'WH-0001',
+    });
+  });
+
+  it('no SEQUENCE segment -> returns the constant prefix', async () => {
+    const lit = makePrefix({
+      id: 'lit-a',
+      type: TypePrefix.TEXT,
+      value: 'WH-',
+    });
+    const { service, manager } = setup(
+      makeFormatMenu([makeSegment(0, lit)], 'warehouse'),
+      [],
+    );
+
+    const res = await service.generateNext('nf-1');
+
+    expect(res.number).toBe('WH-');
+    expect(manager.query).not.toHaveBeenCalled();
   });
 
   it('throws BadRequest when format is inactive', async () => {
     const seq = makePrefix();
-    const { service } = setup(makeFormat([makeSegment(0, seq)], false), [seq]);
+    const { service } = setup(
+      makeFormatMenu([makeSegment(0, seq)], 'warehouse', false),
+    );
     await expect(service.generateNext('nf-1')).rejects.toThrow(
       BadRequestException,
     );
   });
 
-  it('locks sequence rows pessimistically in deterministic order', async () => {
-    const a = makePrefix({ id: 'seq-a' });
-    const b = makePrefix({ id: 'seq-b' });
-    const { service, manager } = setup(
-      makeFormat([makeSegment(0, b), makeSegment(1, a)]),
-      [a, b],
-    );
-    mockQb.getMany.mockResolvedValue([a, b]);
-
-    await service.generateNext('nf-1');
-
-    expect(manager.getRepository).toHaveBeenCalledWith(PrefixEntity);
-    expect(mockQb.setLock).toHaveBeenCalledWith('pessimistic_write');
-    expect(mockQb.where).toHaveBeenCalledWith('p.id IN (:...ids)', {
-      ids: ['seq-a', 'seq-b'],
-    });
-  });
-
   it('throws when a referenced prefix is inactive', async () => {
     const seq = makePrefix({ isActive: false });
-    // locked row returns the inactive prefix; generation must refuse
-    const { service } = setup(makeFormat([makeSegment(0, seq)]), []);
-    mockQb.getMany.mockResolvedValue([seq]);
+    const { service, manager } = setup(
+      makeFormatMenu([makeSegment(0, seq)], 'warehouse'),
+    );
     await expect(service.generateNext('nf-1')).rejects.toThrow(/inactive/);
+    expect(manager.query).not.toHaveBeenCalled();
+  });
+
+  it('throws when SEQUENCE segment exists but format has no menu', async () => {
+    const seq = makePrefix();
+    const { service, manager } = setup(
+      makeFormatMenu([makeSegment(0, seq)], null),
+    );
+    await expect(service.generateNext('nf-1')).rejects.toThrow(
+      /linked to a menu/,
+    );
+    expect(manager.query).not.toHaveBeenCalled();
+  });
+
+  it('throws for multiple SEQUENCE segments', async () => {
+    const a = makePrefix({ id: 'seq-a' });
+    const b = makePrefix({ id: 'seq-b' });
+    const { service } = setup(
+      makeFormatMenu([makeSegment(0, a), makeSegment(1, b)], 'warehouse'),
+    );
+    await expect(service.generateNext('nf-1')).rejects.toThrow(
+      /Only one SEQUENCE/,
+    );
   });
 });
 

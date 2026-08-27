@@ -7,15 +7,15 @@ export interface PrefixLike {
 }
 
 /**
- * Render one segment. SEQUENCE shows last+1 zero-padded to the stored width
- * (pure — never persists). Date types come from `now`. TEXT echoes value.
+ * Render one segment. SEQUENCE shows a zero-padded sample based on the
+ * configured width (value holds the digit count, e.g. "4" -> "0001"; pure —
+ * never reads/consumes a counter). Date types come from `now`. TEXT echoes value.
  */
 export function renderSegment(prefix: PrefixLike, now: Date): string {
   switch (prefix.type) {
     case TypePrefix.SEQUENCE: {
-      const width = Math.max(prefix.value.length, 1);
-      const next = (Number.parseInt(prefix.value, 10) || 0) + 1;
-      return String(next).padStart(width, '0');
+      const width = sequenceWidth(prefix.value);
+      return '1'.padStart(width, '0');
     }
     case TypePrefix.YEAR:
       return String(now.getFullYear());
@@ -26,6 +26,15 @@ export function renderSegment(prefix: PrefixLike, now: Date): string {
     default:
       return prefix.value; // TEXT
   }
+}
+
+/**
+ * Resolve the sequence digit-count from a prefix value. The value holds the
+ * number of digits ("4" -> 4), NOT the current counter. Falls back to 4.
+ */
+export function sequenceWidth(value: string): number {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed >= 1 ? Math.trunc(parsed) : 4;
 }
 
 /** Sorted-by-index segments (with .prefix loaded) -> full example string. */

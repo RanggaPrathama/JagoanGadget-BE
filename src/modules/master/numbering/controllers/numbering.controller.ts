@@ -31,6 +31,12 @@ export class NumberingController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'no_pagination', required: false, type: Boolean })
+  @ApiQuery({
+    name: 'show',
+    required: false,
+    enum: ['active', 'inactive', 'all'],
+  })
   async findAll(@Query() query: PaginationQueryNumberFormatDto) {
     const result = await this.service.findAll(query);
     if (query.no_pagination)
