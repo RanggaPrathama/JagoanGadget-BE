@@ -48,7 +48,7 @@ export class PrefixService {
         break;
     }
     if (!noPagination) qb.skip(skip).take(limit);
-    qb.orderBy('p.name', 'ASC');
+    qb.orderBy('p.createdAt', 'DESC');
     const [items, total] = await qb.getManyAndCount();
     return { items, total, page, limit };
   }

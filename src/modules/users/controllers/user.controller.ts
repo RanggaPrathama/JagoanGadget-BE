@@ -57,6 +57,16 @@ export class UserController {
     );
   }
 
+  @Get('statistics')
+  async getStatistics() {
+    const stats = await this.userService.getStatistics();
+    return responseSuccess(
+      true,
+      'User statistics retrieved successfully',
+      stats,
+    );
+  }
+
   @Get(':userId')
   //@RequirePermission('user.view')
   async findOne(@Param('userId') userId: string) {

@@ -17,6 +17,7 @@ import { PermissionCacheService } from '../../access-control/services/permission
 import { CreateUserDto } from '../dto/user/create-user.dto';
 import { UpdateUserDto } from '../dto/user/update-user.dto';
 import { QueryUserDto } from '../dto/user/query-user.dto';
+import { UserStatisticsResponseDto } from '../dto/user/user-statistics.response.dto';
 import { TempFileService } from '../../uploads/services/temp-file.service';
 
 @Injectable()
@@ -82,6 +83,26 @@ export class UserService {
     }
 
     return user;
+  }
+
+  async getStatistics(): Promise<UserStatisticsResponseDto> {
+    const stats = await this.userRepo
+      .createQueryBuilder('user')
+      .select('COUNT(*)', 'total')
+      .addSelect(`COUNT(*) FILTER (WHERE user.isActive = true)`, 'active')
+      .addSelect(`COUNT(*) FILTER (WHERE user.isActive = false)`, 'inactive')
+      .addSelect(
+        `COUNT(*) FILTER (WHERE user.isSuperadmin = true)`,
+        'superAdmin',
+      )
+      .getRawOne();
+
+    return {
+      totalUsers: parseInt(stats.total, 10),
+      totalActiveUsers: parseInt(stats.active, 10),
+      totalInactiveUsers: parseInt(stats.inactive, 10),
+      totalSuperAdmins: parseInt(stats.superAdmin, 10),
+    };
   }
 
   async create(dto: CreateUserDto): Promise<UserEntity> {

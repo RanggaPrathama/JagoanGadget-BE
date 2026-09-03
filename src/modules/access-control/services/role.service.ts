@@ -5,7 +5,10 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
-import { PaginationQueryDto } from '@common/dto/pagination-query.dto';
+import {
+  PaginationQueryDto,
+  ShowFilter,
+} from '@common/dto/pagination-query.dto';
 import {
   buildPaginationParams,
   PaginatedResult,
@@ -17,7 +20,7 @@ import { UpdateRoleDto } from '../dto/role/update-role.dto';
 import { PermissionEntity } from '../entities/permission.entity';
 import { RolePermissionEntity } from '../entities/role-permission.entity';
 import { RoleEntity } from '../entities/role.entity';
-
+import { RoleStatisticsResponseDto } from '../dto/role/role-statistics.response.dto';
 @Injectable()
 export class RoleService {
   constructor(
@@ -42,7 +45,7 @@ export class RoleService {
   async findAll(
     query: PaginationQueryDto,
   ): Promise<PaginatedResult<RoleEntity>> {
-    const { page, limit, skip, search, noPagination } =
+    const { page, limit, skip, search, show, noPagination } =
       buildPaginationParams(query);
 
     const qb = this.roleRepo
@@ -53,6 +56,15 @@ export class RoleService {
       qb.andWhere('(role.name ILIKE :search OR role.code ILIKE :search)', {
         search: `%${search}%`,
       });
+    }
+
+    switch (show) {
+      case ShowFilter.ACTIVE:
+        qb.andWhere('role.isActive = true');
+        break;
+      case ShowFilter.INACTIVE:
+        qb.andWhere('role.isActive = false');
+        break;
     }
 
     qb.orderBy('role.name', 'ASC');
@@ -91,6 +103,23 @@ export class RoleService {
       throw new NotFoundException(`Role with id "${id}" not found`);
     }
     return role;
+  }
+
+  // get statistics of roles, including total count, active count, and inactive count
+  async getStatistics(): Promise<RoleStatisticsResponseDto> {
+    const stats = await this.roleRepo
+      .createQueryBuilder('roles')
+      .select('COUNT(*)', 'total')
+      .addSelect(`COUNT(*) FILTER (WHERE roles.isActive = true)`, 'active')
+      .addSelect(`COUNT(*) FILTER (WHERE roles.isActive = false)`, 'inactive')
+      .addSelect('COUNT(*) FILTER (WHERE roles.isSystem = true)', 'system')
+      .getRawOne();
+
+    return {
+      totalRole: parseInt(stats.total, 10),
+      totalActiveRole: parseInt(stats.active, 10),
+      totalInactiveRole: parseInt(stats.inactive, 10),
+    };
   }
 
   /**

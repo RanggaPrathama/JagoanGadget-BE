@@ -19,7 +19,7 @@ import { RequirePermission } from '@common/decorators/require-permission.decorat
 import { buildPaginationMeta } from '@common/helpers/pagination.helper';
 import { responseSuccess } from '@common/helpers/response.helper';
 import { AuthGuard } from '@thallesp/nestjs-better-auth';
-
+import { ShowFilter } from '@common/dto/pagination-query.dto';
 @ApiTags('Admin - Roles')
 @Controller('admin/roles')
 export class RoleController {
@@ -32,7 +32,7 @@ export class RoleController {
   @Get()
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'show', required: false, type: String, enum: ShowFilter })
   @UseGuards(AuthGuard)
   async findAll(@Query() query: PaginationQueryDto) {
     const result = await this.roleService.findAll(query);
@@ -50,6 +50,16 @@ export class RoleController {
       'Roles retrieved successfully',
       result.items,
       buildPaginationMeta(result),
+    );
+  }
+
+  @Get('statistics')
+  async getStatistics() {
+    const stats = await this.roleService.getStatistics();
+    return responseSuccess(
+      true,
+      'Role statistics retrieved successfully',
+      stats,
     );
   }
 
