@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, In, Repository } from 'typeorm';
@@ -21,9 +22,9 @@ import {
   buildPaginationParams,
   PaginatedResult,
 } from '@common/helpers/pagination.helper';
-
 @Injectable()
 export class NumberingService {
+  private readonly logger = new Logger(NumberingService.name);
   constructor(
     @InjectRepository(NumberFormatEntity)
     private readonly nfRepo: Repository<NumberFormatEntity>,
@@ -279,6 +280,10 @@ export class NumberingService {
     for (const id of uniqueIds) {
       if (!byId.has(id)) throw new BadRequestException(`Unknown prefix ${id}`);
     }
+
+    this.logger.debug(
+      `Resolved ${found.length} prefixes for ${uniqueIds.length} unique ids`,
+    );
     return byId;
   }
 

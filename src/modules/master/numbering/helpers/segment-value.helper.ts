@@ -42,6 +42,9 @@ export function buildPreview(
   segments: { index: number; prefix: PrefixLike }[],
   now: Date = new Date(),
 ): string {
+  console.debug(
+    `Building preview for ${segments.length} segments at ${now.toISOString()} data segments: ${JSON.stringify(segments)}`,
+  );
   return [...segments]
     .sort((a, b) => a.index - b.index)
     .map((s) => renderSegment(s.prefix, now))
